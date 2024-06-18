@@ -15,6 +15,6 @@ Inspired by the vigilant hundred-eyed giant of Greek mythology, Argos safeguards
 
 We welcome contributions to Argos! Please refer to CONTRIBUTING.md for guidelines for participation, code style, testing practices, and other relevant information.
 ## License
-Argos will be licensed under a permissive open-source license (GPL-3.0 license) to encourage collaboration and community development.  A LICENSE file will be included to specify the exact terms.
+Argos is under the GPL-3.0 license. A LICENSE file will be included to specify the exact terms.
 ## Disclaimer
 * **Argos is provided for informational purposes only and should not be considered legal advice. It is your responsibility to ensure your algorithmic trading practices comply with all applicable laws and regulations. You should consult with legal professionals to obtain specific guidance based on your situation.**
