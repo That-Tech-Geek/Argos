@@ -8,9 +8,39 @@ import re
 import json
 import ast
 import spacy
+from abc import ABC, abstractmethod
+from typing import Union, List, Dict
+
+class StrategyParser(ABC):
+    @abstractmethod
+    def parse(self, strategy: str) -> Union[ast.AST, spacy.tokens.Doc]:
+        pass
+
+class PythonCodeParser(StrategyParser):
+    def parse(self, strategy: str) -> ast.AST:
+        return ast.parse(strategy)
+
+class NaturalLanguageParser(StrategyParser):
+    def parse(self, strategy: str) -> spacy.tokens.Doc:
+        return spacy.load("en_core_web_sm")(strategy)
 
 class Argos:
-    def __init__(self, strategy, jurisdiction, asset_class, data_source, data_frequency, data_history, threshold):
+    def __init__(self, 
+                 strategy: str, 
+                 jurisdiction: str, 
+                 asset_class: str, 
+                 data_source: str, 
+                 data_frequency: str, 
+                 data_history: str, 
+                 threshold: float, 
+                 risk_tolerance: float, 
+                 investment_horizon: str, 
+                 portfolio_size: int, 
+                 leverage: float, 
+                 fees: float, 
+                 risk_free_rate: float, 
+                 market_volatility: float, 
+                 expected_return: float):
         self.strategy = strategy
         self.jurisdiction = jurisdiction
         self.asset_class = asset_class
@@ -18,189 +48,99 @@ class Argos:
         self.data_frequency = data_frequency
         self.data_history = data_history
         self.threshold = threshold
-        self.regulations = {}
-        self.parsed_strategy = {}
-        self.analysis_results = {}
-        self.report = {}
+        self.risk_tolerance = risk_tolerance
+        self.investment_horizon = investment_horizon
+        self.portfolio_size = portfolio_size
+        self.leverage = leverage
+        self.fees = fees
+        self.risk_free_rate = risk_free_rate
+        self.market_volatility = market_volatility
+        self.expected_return = expected_return
+        self.regulations: Dict[str, str] = {}
+        self.parsed_strategy: Union[ast.AST, spacy.tokens.Doc] = None
+        self.analysis_results: Dict[str, float] = {}
+        self.report: List[str] = []
 
-    def preprocess_strategy(self):
-        # Parse strategy format (code, pseudocode, or natural language description)
-        if self.strategy.startswith("def "):
-            # Python code
-            self.parsed_strategy = self.parse_python_code(self.strategy)
-        elif self.strategy.startswith("if "):
-            # Pseudocode
-            self.parsed_strategy = self.parse_pseudocode(self.strategy)
-        else:
-            # Natural language description
-            self.parsed_strategy = self.parse_natural_language(self.strategy)
+    @property
+    def strategy_type(self) -> StrategyParser:
+        if re.search(r'def\s+', self.strategy):
+            return PythonCodeParser()
+        elif re.search(r'\b(if|else|while|for)\b', self.strategy):
+            return NaturalLanguageParser()
+        raise ValueError("Unsupported strategy format")
 
-        # Handle missing data
-        self.handle_missing_data(self.parsed_strategy)
+    def preprocess_strategy(self) -> None:
+        self.parsed_strategy = self.strategy_type.parse(self.strategy)
 
-        # Standardize details
-        self.standardize_details(self.parsed_strategy)
+    def analyze_strategy(self) -> None:
+        if isinstance(self.parsed_strategy, ast.AST):
+            # Analyze Python code
+            pass
+        elif isinstance(self.parsed_strategy, spacy.tokens.Doc):
+            # Analyze natural language
+            pass
 
-    def parse_python_code(self, code):
-        # Use AST to parse Python code
-        tree = ast.parse(code)
-        strategy_dict = {}
-        for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef):
-                strategy_dict["function_name"] = node.name
-                strategy_dict["function_body"] = node.body
-            elif isinstance(node, ast.If):
-                strategy_dict["if_statements"] = node.orelse
-            elif isinstance(node, ast.For):
-                strategy_dict["for_loops"] = node.body
-        return strategy_dict
+        # Calculate metrics
+        self.analysis_results["Sharpe Ratio"] = self.calculate_sharpe_ratio()
+        self.analysis_results["Sortino Ratio"] = self.calculate_sortino_ratio()
+        self.analysis_results["Calmar Ratio"] = self.calculate_calmar_ratio()
 
-    def parse_pseudocode(self, pseudocode):
-        # Use regular expressions to parse pseudocode
-        pattern = r"if (.*) then (.*)"
-        matches = re.findall(pattern, pseudocode)
-        strategy_dict = {}
-        for match in matches:
-            strategy_dict["if_statements"] = {"condition": match[0], "action": match[1]}
-        return strategy_dict
+def calculate_sharpe_ratio(self) -> float:
+    returns = self.parsed_strategy.returns
+    mean_return = np.mean(returns)
+    std_return = np.std(returns)
+    sharpe_ratio = (mean_return - self.risk_free_rate) / std_return
+    return sharpe_ratio
+pass
 
-    def parse_natural_language(self, description):
-        # Use NLP to parse natural language description
-        nlp = spacy.load("en_core_web_sm")
-        doc = nlp(description)
-        strategy_dict = {}
-        for sent in doc.sents:
-            for token in sent:
-                if token.pos_ == "VERB":
-                    strategy_dict["actions"] = token.text
-                elif token.pos_ == "NOUN":
-                    strategy_dict["entities"] = token.text
-        return strategy_dict
+def calculate_sortino_ratio(self) -> float:
+    returns = self.parsed_strategy.returns
+    mean_return = np.mean(returns)
+    downside_deviation = np.sqrt(np.mean(np.square(np.clip(returns - self.target_return, 0, None))))
+    sortino_ratio = (mean_return - self.risk_free_rate) / downside_deviation
+    return sortino_ratio
+pass
 
-    def handle_missing_data(self, strategy_dict):
-        # Handle missing data by imputing with mean or median
-        for key, value in strategy_dict.items():
-            if isinstance(value, list):
-                if not value:
-                    strategy_dict[key] = np.mean([x for x in strategy_dict.values() if x])
-            elif value is None:
-                strategy_dict[key] = np.median([x for x in strategy_dict.values() if x is not None])
+def calculate_calmar_ratio(self) -> float:
+    returns = self.parsed_strategy.returns
+    max_drawdown = self.calculate_max_drawdown(returns)
+    mean_return = np.mean(returns)
+    calmar_ratio = mean_return / max_drawdown
+    return calmar_ratio
+pass
+def calculate_max_drawdown(self, returns) -> float:
+    peak = returns[0]
+    trough = returns[0]
+    peak_to_trough_drawdowns = []
+    for ret in returns:
+        if ret > peak:
+            peak = ret
+            trough = ret
+        elif ret < trough:
+            trough = ret
+            peak_to_trough_drawdowns.append((peak - trough) / peak)
+    return np.max(peak_to_trough_drawdowns)
+pass
 
-    def standardize_details(self, strategy_dict):
-        # Standardize details by converting to lowercase and removing special characters
-        for key, value in strategy_dict.items():
-            if isinstance(value, str):
-                strategy_dict[key] = re.sub(r"[^a-zA-Z0-9]", "", value).lower()
+def generate_report(self) -> None:
+        self.report.append("Strategy Report:")
+        self.report.append(f"Jurisdiction: {self.jurisdiction}")
+        self.report.append(f"Asset Class: {self.asset_class}")
+        self.report.append(f"Data Source: {self.data_source}")
+        self.report.append(f"Data Frequency: {self.data_frequency}")
+        self.report.append(f"Data History: {self.data_history}")
+        self.report.append(f"Threshold: {self.threshold}")
+        self.report.append(f"Risk Tolerance: {self.risk_tolerance}")
+        self.report.append(f" Investment Horizon: {self.investment_horizon}")
+        self.report.append(f"Portfolio Size: {self.portfolio_size}")
+        self.report.append(f"Leverage: {self.leverage}")
+        self.report.append(f"Fees: {self.fees}")
+        self.report.append(f"Risk Free Rate: {self.risk_free_rate}")
+        self.report.append(f"Market Volatility: {self.market_volatility}")
+        self.report.append(f"Expected Return: {self.expected_return}")
+        self.report.append("Analysis Results:")
+        for key, value in self.analysis_results.items():
+            self.report.append(f"{key}: {value}")
 
-    def acquire_regulations(self):
-        # Retrieve relevant financial regulations based on jurisdiction and asset class
-        regulations_file = f"regulations_{self.jurisdiction}_{self.asset_class}.json"
-        with open(regulations_file, "r") as f:
-            self.regulations = json.load(f)
-
-    def simplify_regulations(self):
-        # Simplify regulations by extracting key elements like violation triggers and consequences
-        simplified_regulations = {}
-        for regulation in self.regulations:
-            simplified_regulations[regulation["id"]] = {
-                "violation_triggers": regulation["triggers"],
-                "consequences": regulation["consequences"]
-            }
-        self.regulations = simplified_regulations
-
-    def analyze_strategy(self):
-        # Use explainable AI techniques to analyze the strategy's logic against the regulations
-        X = pd.DataFrame(self.parsed_strategy)
-        y = pd.Series([0] * len(X))  # Initialize with no violations
-
-        # Train a decision tree classifier to identify potential compliance risks
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        clf = DecisionTreeClassifier(random_state=42)
-        clf.fit(X_train, y_train)
-
-        # Use the trained model to predict potential violations
-        y_pred = clf.predict(X_test)
-
-        # Generate explanations for potential violations
-        explanations = []
-for i, row in X_test.iterrows():
-            if y_pred[i] == 1:
-                feature_importance = clf.feature_importances_[i]
-                feature_names = X_test.columns
-                feature_imp_dict = dict(zip(feature_names, feature_importance))
-                explanations.append(
-                    {
-                        "row": row,
-                        "prediction": y_pred[i],
-                        "explanation": feature_imp_dict
-                    }
-                )
-
-        self.analysis_results = {
-            "accuracy": accuracy_score(y_test, y_pred),
-            "classification_report": classification_report(y_test, y_pred),
-            "explanations": explanations
-        }
-
-    def generate_report(self):
-        # Generate a user-friendly report summarizing potential compliance risks
-        self.report = {
-            "jurisdiction": self.jurisdiction,
-            "asset_class": self.asset_class,
-            "strategy": self.parsed_strategy,
-            "data_source": self.data_source,
-            "data_frequency": self.data_frequency,
-            "data_history": self.data_history,
-            "threshold": self.threshold,
-            "analysis_results": self.analysis_results
-        }
-
-        # Identify violations, explanations, and severity levels
-        violations = []
-        for explanation in self.analysis_results["explanations"]:
-            if explanation["prediction"] == 1:
-                violation = {
-                    "regulation_id": self.find_regulation_id(explanation["explanation"]),
-                    "explanation": explanation["explanation"],
-                    "severity": self.calculate_severity(explanation["explanation"])
-                }
-                violations.append(violation)
-
-        self.report["violations"] = violations
-
-    def find_regulation_id(self, feature_importance):
-        # Find the regulation ID that corresponds to the most important feature
-        max_importance = max(feature_importance.values())
-        regulation_id = list(feature_importance.keys())[
-            list(feature_importance.values()).index(max_importance)]
-        return regulation_id
-
-    def calculate_severity(self, feature_importance):
-        # Calculate the severity of the violation based on the importance of the features
-        severity = sum(feature_importance.values())
-        return severitydef run(self):
-        self.preprocess_strategy()
-        self.acquire_regulations()
-        self.simplify_regulations()
-        self.analyze_strategy()
-        self.generate_report()
-
-if __name__ == "__main__":
-    strategy = """
-    def trading_strategy(price):
-        if price > 100:
-            return "buy"
-        else:
-            return "sell"
-    """
-    jurisdiction = "US"
-    asset_class = "equities"
-    data_source = "Quandl"
-    data_frequency = "daily"
-    data_history = "1 year"
-    threshold = 0.5
-
-    argos = Argos(strategy, jurisdiction, asset_class, data_source, data_frequency, data_history, threshold)
-    argos.run()
-
-    print(json.dumps(argos.report, indent=4))
+def __str__(self) -> str:
+        return "\n".join
