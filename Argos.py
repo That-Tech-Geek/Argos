@@ -12,19 +12,82 @@ from abc import ABC, abstractmethod
 from typing import Union, List, Dict
 
 class StrategyParser(ABC):
+    """Abstract base class for strategy parsers"""
     @abstractmethod
     def parse(self, strategy: str) -> Union[ast.AST, spacy.tokens.Doc]:
+        """Parse a strategy string into an AST or spaCy Doc"""
         pass
 
 class PythonCodeParser(StrategyParser):
+    """Parser for Python code strategies"""
     def parse(self, strategy: str) -> ast.AST:
+        """Parse a Python code strategy into an AST"""
         return ast.parse(strategy)
 
 class NaturalLanguageParser(StrategyParser):
+    """Parser for natural language strategies"""
+    def __init__(self):
+        self.nlp = spacy.load("en_core_web_sm")
+
     def parse(self, strategy: str) -> spacy.tokens.Doc:
-        return spacy.load("en_core_web_sm")(strategy)
+        """Parse a natural language strategy into a spaCy Doc"""
+        return self.nlp(strategy)
+
+class LawAnalyzer:
+    """Class to analyze the legality of a strategy and suggest changes"""
+    def __init__(self, jurisdiction: str):
+        self.jurisdiction = jurisdiction
+        self.law_database = self.load_law_database()
+
+    def load_law_database(self) -> Dict[str, str]:
+        """Load a database of laws and regulations for the given jurisdiction"""
+        # TO DO: implement loading of law database
+        pass
+
+    def analyze_strategy(self, strategy: str) -> Dict[str, str]:
+        """Analyze the legality of a strategy and suggest changes"""
+        # Parse the strategy using a natural language parser
+        parsed_strategy = NaturalLanguageParser().parse(strategy)
+
+        # Identify potential legal issues with the strategy
+        legal_issues = self.identify_legal_issues(parsed_strategy)
+
+        # Suggest changes to make the strategy lawful
+        suggested_changes = self.suggest_changes(legal_issues)
+
+        return suggested_changes
+
+    def identify_legal_issues(self, parsed_strategy: spacy.tokens.Doc) -> List[str]:
+        """Identify potential legal issues with the strategy"""
+        # TO DO: implement identification of legal issues
+        pass
+
+    def suggest_changes(self, legal_issues: List[str]) -> Dict[str, str]:
+        """Suggest changes to make the strategy lawful"""
+        suggested_changes = {}
+        for issue in legal_issues:
+            # Check if the issue is related to a specific law or regulation
+            relevant_law = self.law_database.get(issue)
+            if relevant_law:
+                # Suggest changes to comply with the law
+                suggested_changes[issue] = self.suggest_compliant_change(relevant_law)
+            else:
+                # Suggest changes to exploit loopholes in the law
+                suggested_changes[issue] = self.suggest_loophole_exploitation(issue)
+        return suggested_changes
+
+    def suggest_compliant_change(self, relevant_law: str) -> str:
+        """Suggest changes to comply with a specific law or regulation"""
+        # TO DO: implement suggestion of compliant changes
+        pass
+
+    def suggest_loophole_exploitation(self, issue: str) -> str:
+        """Suggest changes to exploit loopholes in the law"""
+        # TO DO: implement suggestion of loophole exploitation
+        pass
 
 class Argos:
+    """Argos class for strategy configuration"""
     def __init__(self, 
                  strategy: str, 
                  jurisdiction: str, 
@@ -33,14 +96,20 @@ class Argos:
                  data_frequency: str, 
                  data_history: str, 
                  threshold: float, 
-                 risk_tolerance: float, 
-                 investment_horizon: str, 
-                 portfolio_size: int, 
-                 leverage: float, 
-                 fees: float, 
-                 risk_free_rate: float, 
-                 market_volatility: float, 
-                 expected_return: float):
+                 risk_tolerance: float):
+        """
+        Initialize an Argos instance with strategy configuration
+
+        Args:
+            strategy (str): Strategy string
+            jurisdiction (str): Jurisdiction
+            asset_class (str): Asset class
+            data_source (str): Data source
+            data_frequency (str): Data frequency
+            data_history (str): Data history
+            threshold (float): Threshold value
+            risk_tolerance (float): Risk tolerance value
+        """
         self.strategy = strategy
         self.jurisdiction = jurisdiction
         self.asset_class = asset_class
@@ -49,98 +118,8 @@ class Argos:
         self.data_history = data_history
         self.threshold = threshold
         self.risk_tolerance = risk_tolerance
-        self.investment_horizon = investment_horizon
-        self.portfolio_size = portfolio_size
-        self.leverage = leverage
-        self.fees = fees
-        self.risk_free_rate = risk_free_rate
-        self.market_volatility = market_volatility
-        self.expected_return = expected_return
-        self.regulations: Dict[str, str] = {}
-        self.parsed_strategy: Union[ast.AST, spacy.tokens.Doc] = None
-        self.analysis_results: Dict[str, float] = {}
-        self.report: List[str] = []
+        self.law_analyzer = LawAnalyzer(jurisdiction)
 
-    @property
-    def strategy_type(self) -> StrategyParser:
-        if re.search(r'def\s+', self.strategy):
-            return PythonCodeParser()
-        elif re.search(r'\b(if|else|while|for)\b', self.strategy):
-            return NaturalLanguageParser()
-        raise ValueError("Unsupported strategy format")
-
-    def preprocess_strategy(self) -> None:
-        self.parsed_strategy = self.strategy_type.parse(self.strategy)
-
-    def analyze_strategy(self) -> None:
-        if isinstance(self.parsed_strategy, ast.AST):
-            # Analyze Python code
-            pass
-        elif isinstance(self.parsed_strategy, spacy.tokens.Doc):
-            # Analyze natural language
-            pass
-
-        # Calculate metrics
-        self.analysis_results["Sharpe Ratio"] = self.calculate_sharpe_ratio()
-        self.analysis_results["Sortino Ratio"] = self.calculate_sortino_ratio()
-        self.analysis_results["Calmar Ratio"] = self.calculate_calmar_ratio()
-
-def calculate_sharpe_ratio(self) -> float:
-    returns = self.parsed_strategy.returns
-    mean_return = np.mean(returns)
-    std_return = np.std(returns)
-    sharpe_ratio = (mean_return - self.risk_free_rate) / std_return
-    return sharpe_ratio
-pass
-
-def calculate_sortino_ratio(self) -> float:
-    returns = self.parsed_strategy.returns
-    mean_return = np.mean(returns)
-    downside_deviation = np.sqrt(np.mean(np.square(np.clip(returns - self.target_return, 0, None))))
-    sortino_ratio = (mean_return - self.risk_free_rate) / downside_deviation
-    return sortino_ratio
-pass
-
-def calculate_calmar_ratio(self) -> float:
-    returns = self.parsed_strategy.returns
-    max_drawdown = self.calculate_max_drawdown(returns)
-    mean_return = np.mean(returns)
-    calmar_ratio = mean_return / max_drawdown
-    return calmar_ratio
-pass
-def calculate_max_drawdown(self, returns) -> float:
-    peak = returns[0]
-    trough = returns[0]
-    peak_to_trough_drawdowns = []
-    for ret in returns:
-        if ret > peak:
-            peak = ret
-            trough = ret
-        elif ret < trough:
-            trough = ret
-            peak_to_trough_drawdowns.append((peak - trough) / peak)
-    return np.max(peak_to_trough_drawdowns)
-pass
-
-def generate_report(self) -> None:
-        self.report.append("Strategy Report:")
-        self.report.append(f"Jurisdiction: {self.jurisdiction}")
-        self.report.append(f"Asset Class: {self.asset_class}")
-        self.report.append(f"Data Source: {self.data_source}")
-        self.report.append(f"Data Frequency: {self.data_frequency}")
-        self.report.append(f"Data History: {self.data_history}")
-        self.report.append(f"Threshold: {self.threshold}")
-        self.report.append(f"Risk Tolerance: {self.risk_tolerance}")
-        self.report.append(f" Investment Horizon: {self.investment_horizon}")
-        self.report.append(f"Portfolio Size: {self.portfolio_size}")
-        self.report.append(f"Leverage: {self.leverage}")
-        self.report.append(f"Fees: {self.fees}")
-        self.report.append(f"Risk Free Rate: {self.risk_free_rate}")
-        self.report.append(f"Market Volatility: {self.market_volatility}")
-        self.report.append(f"Expected Return: {self.expected_return}")
-        self.report.append("Analysis Results:")
-        for key, value in self.analysis_results.items():
-            self.report.append(f"{key}: {value}")
-
-def __str__(self) -> str:
-        return "\n".join
+    def analyze_legality(self) -> Dict[str, str]:
+        """Analyze the legality of the strategy and suggest changes"""
+        return self.law_analyzer.analyze_strategy(self.strategy)
