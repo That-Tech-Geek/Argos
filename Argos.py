@@ -1,9 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
-from keras.models import Sequential
-from keras.layers import LSTM, Dense
+from sklearn.neural_network import MLPRegressor
+from sklearn.model_selection import train_test_split
 
 # Set title of the Streamlit app
 st.title("Stock Risk Prediction")
@@ -15,33 +14,26 @@ uploaded_file = st.file_uploader("Upload CSV file", type=["csv"], accept_multipl
 if uploaded_file is not None:
     stock_data = pd.read_csv(uploaded_file)
 
-    # Preprocess data
-    scaler = MinMaxScaler()
-    columns_to_scale = ['Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume', 'Average Total Assets', 'Asset Turnover Ratio', 
-                        'EBIT', 'Interest Rate', 'Corporate Tax', 'Debt-to-Equity Ratio', 'Current Ratio', 'Interest Coverage Ratio', 
-                        'Debt-to-Capital Ratio', 'Price-to-Earnings Ratio', 'Price-to-Book Ratio', 'Return on Equity (ROE)', 
-                        'Return on Assets (ROA)', 'Earnings Yield', 'Dividend Yield', 'Price-to-Sales Ratio', 
-                        'Enterprise Value-to-EBITDA Ratio', 'Inventory Turnover Ratio', 'Receivables Turnover Ratio', 
-                        'Payables Turnover Ratio', 'Cash Conversion Cycle', 'Debt Service Coverage Ratio', 'Return on Invested Capital (ROIC)', 
-                        'Return on Common Equity (ROCE)', 'Gross Margin Ratio', 'Operating Margin Ratio', 'Net Profit Margin Ratio', 
-                        'Debt to Assets Ratio', 'Equity Ratio', 'Financial Leverage Ratio', 'Proprietary Ratio', 'Capital Gearing Ratio', 
-                        'DSCR', 'Gross Profit Ratio', 'Net Profit Ratio', 'ROI', 'EBITDA Margin', 'Fixed Asset Turnover Ratio', 
-                        'Capital Turnover Ratio']
-    stock_data[columns_to_scale] = scaler.fit_transform(stock_data[columns_to_scale])
+    # Display the data
+    st.write("Data:")
+    st.write(stock_data)
 
-    # Create LSTM model
-    model = Sequential()
-    model.add(LSTM(units=50, return_sequences=True, input_shape=(stock_data.shape[1], 1)))
-    model.add(LSTM(units=50))
-    model.add(Dense(1))
-    model.compile(loss='mean_squared_error', optimizer='adam')
+    # Split the data into features and target
+    X = stock_data.drop(["Risk"], axis=1)
+    y = stock_data["Risk"]
 
-    # Train model
-    model.fit(stock_data, epochs=50, batch_size=1, verbose=2)
+    # Split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Create a neural network model
+    model = MLPRegressor(hidden_layer_sizes=(50, 50), max_iter=1000)
+
+    # Train the model
+    model.fit(X_train, y_train)
 
     # Make predictions
-    predictions = model.predict(stock_data)
+    y_pred = model.predict(X_test)
 
-    # Display predictions
+    # Display the predictions
     st.write("Predictions:")
-    st.write(predictions)
+    st.write(y_pred)
