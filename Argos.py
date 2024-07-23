@@ -29,7 +29,7 @@ class RiskPrediction:
         self.y_test = None
 
     def prepare_data(self):
-        self.data['Price_Direction'] = np.where(self.data['Close'].shift(-1) > self.data['Close'], 1, 0)
+        self.data['Price_Direction'] = np.where(self.data['Close'].shift(1) > self.data['Close'], 1, 0)
         self.data.dropna(inplace=True)
         self.X = self.data[['Open', 'High', 'Low', 'Close', 'Volume']]
         self.y = self.data['Price_Direction']
