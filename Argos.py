@@ -4,6 +4,7 @@ import plotly.express as px
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, precision_score, recall_score, f1_score
+from sklearn.preprocessing import StandardScaler
 import numpy as np
 
 # RiskManagement class to calculate volatility
@@ -40,11 +41,14 @@ class RiskPrediction:
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
 
     def train_model(self):
-        self.model = RandomForestClassifier()
-        self.model.fit(self.X_train, self.y_train)
+        scaler = StandardScaler()
+        self.X_train_scaled = scaler.fit_transform(self.X_train)
+        self.X_test_scaled = scaler.transform(self.X_test)
+        self.model = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)
+        self.model.fit(self.X_train_scaled, self.y_train)
 
     def evaluate_model(self):
-        self.prediction = self.model.predict(self.X_test)
+        self.prediction = self.model.predict(self.X_test_scaled)
         accuracy = accuracy_score(self.y_test, self.prediction)
         st.write(f"Accuracy: {accuracy:.3f}")
         st.write("Classification Report:")
