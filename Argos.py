@@ -34,6 +34,7 @@ class RiskPrediction:
         self.X = self.data[['Open', 'High', 'Low', 'Close', 'Volume']]
         self.y = self.data['Price_Direction']
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
+        self.data.drop(columns=['Price_Direction'], inplace=True)
 
     def train_model(self):
         self.model = RandomForestClassifier()
