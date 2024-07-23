@@ -15,7 +15,7 @@ class RiskPrediction:
         self.prediction = None
         self.y_test = None
 
-    class RiskPrediction:
+class RiskPrediction:
     def __init__(self, data):
         self.data = data
         self.X = None
