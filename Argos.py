@@ -22,6 +22,18 @@ class RiskPrediction:
         self.y = self.data['Price_Direction']
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
 
+    def train_model(self):
+        self.model = RandomForestClassifier()
+        self.model.fit(self.X_train, self.y_train)
+
+    def evaluate_model(self):
+        self.prediction = self.model.predict(self.X_test)
+        st.write("Error Metrics:")
+        st.write(f"Accuracy: {accuracy_score(self.y_test, self.prediction):.3f}")
+        st.write(f"Precision: {precision_score(self.y_test, self.prediction):.3f}")
+        st.write(f"Recall: {recall_score(self.y_test, self.prediction):.3f}")
+        st.write(f"F1 Score: {f1_score(self.y_test, self.prediction):.3f}")
+
 class RiskManagement:
     def __init__(self, data):
         self.data = data
