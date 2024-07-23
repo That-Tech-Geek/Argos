@@ -1,10 +1,9 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import plotly.express as px
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
 # RiskManagement class to calculate volatility
 class RiskManagement:
@@ -43,7 +42,11 @@ class RiskPrediction:
 
     def evaluate_model(self):
         accuracy = accuracy_score(self.y_test, self.prediction)
-        st.write(f"Accuracy: {accuracy}")
+        st.write(f"Accuracy: {accuracy:.3f}")
+        st.write("Classification Report:")
+        st.write(classification_report(self.y_test, self.prediction))
+        st.write("Confusion Matrix:")
+        st.write(confusion_matrix(self.y_test, self.prediction))
 
     def save_plot(self):
         fig = px.line(self.X_test, x=self.X_test.index, y=self.prediction, title='Price Direction Prediction')
