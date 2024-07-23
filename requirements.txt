@@ -3,6 +3,3 @@ numpy
 pandas
 streamlit
 scikit-learn
-keras.models
-keras.api
-keras.src
