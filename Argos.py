@@ -120,10 +120,10 @@ if uploaded_file is not None:
     st.write(data.columns)
 
     # Create RiskManagement instance
-    risk_management = RiskManagement(data)
-    risk_management.calculate_volatility()
+    RiskManagement = RiskManagement(data)
+    RiskManagement.calculate_volatility()
     st.header("Volatility Over Time")
-    risk_management.plot_volatility()
+    RiskManagement.plot_volatility()
 
     # Create RiskPrediction instance
     risk_prediction = RiskPrediction(data)
