@@ -126,12 +126,12 @@ if uploaded_file is not None:
     RiskManagement.plot_volatility()
 
     # Create RiskPrediction instance
-    risk_prediction = RiskPrediction(data)
-    risk_prediction.prepare_data()
-    risk_prediction.train_model()
+    RiskPrediction = RiskPrediction(data)
+    RiskPrediction.prepare_data()
+    RiskPrediction.train_model()
     st.header("Model Evaluation")
-    risk_prediction.evaluate_model()
+    RiskPrediction.evaluate_model()
     st.header("Price Direction Prediction")
-    risk_prediction.save_plot()
+    RiskPrediction.save_plot()
 else:
     st.write("Please upload a CSV file.")
