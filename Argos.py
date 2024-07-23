@@ -28,13 +28,17 @@ class RiskPrediction:
         self.prediction = None
         self.y_test = None
 
-    def prepare_data(self):
-        self.data['Price_Direction'] = np.where(self.data['Close'].shift(1) > self.data['Close'], 1, 0)
-        self.data.dropna(inplace=True)
-        self.X = self.data[['Open', 'High', 'Low', 'Close', 'Volume']]
-        self.y = self.data['Price_Direction']
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
-        self.data.drop(columns=['Price_Direction'], inplace=True)
+    def evaluate_model(self):
+        accuracy = accuracy_score(self.y_test, self.prediction)
+        st.write(f"Accuracy: {accuracy:.3f}")
+        st.write("Classification Report:")
+        st.write(classification_report(self.y_test, self.prediction))
+        st.write("Confusion Matrix:")
+        st.write(confusion_matrix(self.y_test, self.prediction))
+        st.write("Error Metrics:")
+        st.write(f"Precision: {precision_score(self.y_test, self.prediction):.3f}")
+        st.write(f"Recall: {recall_score(self.y_test, self.prediction):.3f}")
+        st.write(f"F1 Score: {f1_score(self.y_test, self.prediction):.3f}")
 
     def train_model(self):
         self.model = RandomForestClassifier()
