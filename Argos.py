@@ -6,13 +6,21 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
 # RiskManagement class to calculate volatility
-class RiskManagement:
+class RiskPrediction:
     def __init__(self, data):
         self.data = data
+        self.X = None
+        self.y = None
+        self.model = None
+        self.prediction = None
+        self.y_test = None
 
-    def calculate_volatility(self):
-        self.data['Daily_Return'] = self.data['Close'].pct_change()
-        self.data['Volatility'] = self.data['Daily_Return'].rolling(window=20).std()
+    def prepare_data(self):
+        self.data['Price_Direction'] = np.where(self.data['Close'].shift(1) > self.data['Close'], 1, 0)
+        self.data.dropna(inplace=True)
+        self.X = self.data[['Open', 'High', 'Low', 'Close', 'Volume']]
+        self.y = self.data['Price_Direction']
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
 
     def plot_volatility(self):
         fig = px.line(self.data, x=self.data.index, y='Volatility', title='Volatility Over Time')
