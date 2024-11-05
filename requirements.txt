@@ -1,5 +1,5 @@
-tensorflow
-numpy
+yfinance
 pandas
+numpy
+talib
 streamlit
-scikit-learn
