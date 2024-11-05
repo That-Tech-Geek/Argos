@@ -35,21 +35,20 @@ def perform_candlestick_analysis(stock_data):
     
     # Check for Bullish Engulfing pattern
     if len(stock_data) >= 2:
-        bullish_engulfing = (
-            (stock_data['Open'].iloc[-2] > stock_data['Close'].iloc[-2]) and
-            (stock_data['Close'].iloc[-1] > stock_data['Open'].iloc[-1]) and
-            (stock_data['Open'].iloc[-1] < stock_data['Close'].iloc[-2])
-        )
-        bearish_engulfing = (
-            (stock_data['Open'].iloc[-2] < stock_data['Close'].iloc[-2]) and
-            (stock_data['Close'].iloc[-1] < stock_data['Open'].iloc[-1]) and
-            (stock_data['Open'].iloc[-1] > stock_data['Close'].iloc[-2])
-        )
+        prev_open = stock_data['Open'].iloc[-2]
+        prev_close = stock_data['Close'].iloc[-2]
+        curr_open = stock_data['Open'].iloc[-1]
+        curr_close = stock_data['Close'].iloc[-1]
 
-        if bullish_engulfing:
+        if (prev_open > prev_close and
+            curr_close > curr_open and
+            curr_open < prev_close):
             patterns['Bullish Engulfing'] = True
             
-        if bearish_engulfing:
+        # Check for Bearish Engulfing pattern
+        if (prev_open < prev_close and
+            curr_close < curr_open and
+            curr_open > prev_close):
             patterns['Bearish Engulfing'] = True
 
     return patterns
