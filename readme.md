@@ -6,9 +6,9 @@ This is a **Stock Scoring Application** built using **Streamlit**. The app fetch
 
 - **Rolling Means**: Calculates 7-day, 50-day, and 200-day rolling averages for both the opening and closing prices of the stock.
 - **VIX Data**: Fetches the VIX (Volatility Index) for multiple timeframes including 1 year, 1 month, 1 day, 1 hour, and 1 minute.
-- **RSI (Relative Strength Index)**: Determines the percentage of time the stock was overbought or oversold.
+- **RSI (Relative Strength Index)**: Determines the percentage of time the stock was overbought or oversold using a custom RSI calculation (without TA-Lib).
 - **Financial Ratios**: Fetches financial ratios such as Price-to-Earnings (P/E), Price-to-Book (P/B), Return on Equity (ROE), Debt-to-Equity, and Current Ratio to evaluate the stock's financial health.
-- **Candlestick Pattern Analysis**: Uses technical indicators like Doji, Hammer, and Engulfing patterns to assess the stock's candlestick patterns.
+- **Candlestick Pattern Analysis**: Performs quantitative analysis of candlestick patterns to assess trends and patterns in stock prices.
 
 ## Installation
 
@@ -22,7 +22,6 @@ This is a **Stock Scoring Application** built using **Streamlit**. The app fetch
 3. Required libraries:
     - [Streamlit](https://streamlit.io/)
     - [yfinance](https://pypi.org/project/yfinance/)
-    - [TA-Lib](https://pypi.org/project/TA-Lib/)
     - [Pandas](https://pandas.pydata.org/)
     - [NumPy](https://numpy.org/)
 
@@ -48,13 +47,13 @@ The stock score is calculated using the following components:
     - VIX values are fetched for multiple intervals (1 year, 1 month, 1 day, 1 hour, 1 minute) and averaged.
 
 3. **RSI (Relative Strength Index)**:
-    - The percentage of time the stock is in an overbought (RSI > 70) or oversold (RSI < 30) condition is considered.
+    - A custom function is used to calculate RSI from stock data, and the percentage of time the stock is in an overbought (RSI > 70) or oversold (RSI < 30) condition is considered.
 
 4. **Financial Ratios**:
     - Key financial ratios like P/E, P/B, ROE, Debt-to-Equity, and Current Ratio are fetched from Yahoo Finance.
 
 5. **Candlestick Patterns**:
-    - Technical analysis of candlestick patterns like Doji, Hammer, and Engulfing is performed using TA-Lib.
+    - Quantitative analysis of candlestick patterns is performed to provide insights into the stock’s price trends and potential reversals.
 
 The scoring formula combines these metrics to produce an overall score. Each component is weighted to reflect its importance.
 
@@ -77,7 +76,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Note
 
 - This application provides a competitive score based on available data and technical analysis. It is recommended to conduct further research before making investment decisions.
-- Ensure that `TA-Lib` is properly installed, as it might require additional setup on some systems.
 
 ---
 
