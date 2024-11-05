@@ -35,20 +35,15 @@ def perform_candlestick_analysis(stock_data):
     
     # Check for Bullish Engulfing pattern
     if len(stock_data) >= 2:
-        prev_open = stock_data['Open'].iloc[-2]
-        prev_close = stock_data['Close'].iloc[-2]
-        curr_open = stock_data['Open'].iloc[-1]
-        curr_close = stock_data['Close'].iloc[-1]
-
-        if (prev_open > prev_close and
-            curr_close > curr_open and
-            curr_open < prev_close):
+        if (stock_data['Open'].iloc[-2] > stock_data['Close'].iloc[-2] and
+            stock_data['Close'].iloc[-1] > stock_data['Open'].iloc[-1] and
+            stock_data['Open'].iloc[-1] < stock_data['Close'].iloc[-2]):
             patterns['Bullish Engulfing'] = True
             
         # Check for Bearish Engulfing pattern
-        if (prev_open < prev_close and
-            curr_close < curr_open and
-            curr_open > prev_close):
+        if (stock_data['Open'].iloc[-2] < stock_data['Close'].iloc[-2] and
+            stock_data['Close'].iloc[-1] < stock_data['Open'].iloc[-1] and
+            stock_data['Open'].iloc[-1] > stock_data['Close'].iloc[-2]):
             patterns['Bearish Engulfing'] = True
 
     return patterns
@@ -81,12 +76,18 @@ def get_stock_score(ticker):
     score_close = (stock_data['7d_close'].iloc[-1] + stock_data['50d_close'].iloc[-1] + stock_data['200d_close'].iloc[-1]) / 3
     score_vix = vix_data['Close'].iloc[-1] if not vix_data.empty else np.nan
 
+    # Calculate RSI impact on score (normalized)
+    rsi_overbought = len(stock_data[stock_data['RSI'] > 70])
+    rsi_oversold = len(stock_data[stock_data['RSI'] < 30])
+    
+    rsi_impact = (rsi_overbought - rsi_oversold) / len(stock_data) if len(stock_data) > 0 else 0
+
     # Combine the scores with weights
     overall_score = (
         0.3 * score_open +
         0.3 * score_close +
         0.2 * score_vix +
-        0.1 * (len(stock_data[stock_data['RSI'] > 70]) - len(stock_data[stock_data['RSI'] < 30])) / len(stock_data)
+        0.1 * rsi_impact
     )
 
     return overall_score, calculate_financial_ratios(ticker), perform_candlestick_analysis(stock_data)
