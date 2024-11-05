@@ -20,30 +20,34 @@ def calculate_rsi(data, window=14):
 def calculate_financial_ratios(ticker):
     stock = yf.Ticker(ticker)
     ratios = {}
-    
+
     # Example financial ratios
     ratios['PE Ratio'] = stock.info.get('forwardPE', np.nan)  # Forward P/E ratio
     ratios['ROE'] = stock.info.get('returnOnEquity', np.nan)  # Return on Equity
     ratios['Debt to Equity'] = stock.info.get('debtToEquity', np.nan)  # Debt to Equity ratio
     ratios['Current Ratio'] = stock.info.get('currentRatio', np.nan)  # Current Ratio
-    
+
     return ratios
 
 # Function to perform candlestick analysis
 def perform_candlestick_analysis(stock_data):
     patterns = {}
-    
+
     # Check for Bullish Engulfing pattern
     if len(stock_data) >= 2:
-        if (stock_data['Open'].iloc[-2] > stock_data['Close'].iloc[-2] and
-            stock_data['Close'].iloc[-1] > stock_data['Open'].iloc[-1] and
-            stock_data['Open'].iloc[-1] < stock_data['Close'].iloc[-2]):
+        if (
+            (stock_data['Open'].iloc[-2] > stock_data['Close'].iloc[-2]).all() and
+            (stock_data['Close'].iloc[-1] > stock_data['Open'].iloc[-1]).all() and
+            (stock_data['Open'].iloc[-1] < stock_data['Close'].iloc[-2]).all()
+        ):
             patterns['Bullish Engulfing'] = True
-            
+
         # Check for Bearish Engulfing pattern
-        if (stock_data['Open'].iloc[-2] < stock_data['Close'].iloc[-2] and
-            stock_data['Close'].iloc[-1] < stock_data['Open'].iloc[-1] and
-            stock_data['Open'].iloc[-1] > stock_data['Close'].iloc[-2]):
+        if (
+            (stock_data['Open'].iloc[-2] < stock_data['Close'].iloc[-2]).all() and
+            (stock_data['Close'].iloc[-1] < stock_data['Open'].iloc[-1]).all() and
+            (stock_data['Open'].iloc[-1] > stock_data['Close'].iloc[-2]).all()
+        ):
             patterns['Bearish Engulfing'] = True
 
     return patterns
@@ -79,7 +83,6 @@ def get_stock_score(ticker):
     # Calculate RSI impact on score (normalized)
     rsi_overbought = len(stock_data[stock_data['RSI'] > 70])
     rsi_oversold = len(stock_data[stock_data['RSI'] < 30])
-    
     rsi_impact = (rsi_overbought - rsi_oversold) / len(stock_data) if len(stock_data) > 0 else 0
 
     # Combine the scores with weights
