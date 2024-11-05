@@ -31,20 +31,23 @@ def calculate_financial_ratios(ticker):
 
 # Function to perform candlestick analysis
 def perform_candlestick_analysis(stock_data):
-    patterns = {
-        'Bullish Engulfing': (
-            stock_data['Open'].iloc[-2] > stock_data['Close'].iloc[-2] and 
-            stock_data['Close'].iloc[-1] > stock_data['Open'].iloc[-1] and 
-            stock_data['Open'].iloc[-1] < stock_data['Close'].iloc[-2]
-        ),
-        'Bearish Engulfing': (
-            stock_data['Open'].iloc[-2] < stock_data['Close'].iloc[-2] and 
-            stock_data['Close'].iloc[-1] < stock_data['Open'].iloc[-1] and 
-            stock_data['Open'].iloc[-1] > stock_data['Close'].iloc[-2]
-        ),
-    }
+    patterns = {}
+    
+    # Check for Bullish Engulfing pattern
+    if (len(stock_data) >= 2 and
+        stock_data['Open'].iloc[-2] > stock_data['Close'].iloc[-2] and
+        stock_data['Close'].iloc[-1] > stock_data['Open'].iloc[-1] and
+        stock_data['Open'].iloc[-1] < stock_data['Close'].iloc[-2]):
+        patterns['Bullish Engulfing'] = True
+        
+    # Check for Bearish Engulfing pattern
+    if (len(stock_data) >= 2 and
+        stock_data['Open'].iloc[-2] < stock_data['Close'].iloc[-2] and
+        stock_data['Close'].iloc[-1] < stock_data['Open'].iloc[-1] and
+        stock_data['Open'].iloc[-1] > stock_data['Close'].iloc[-2]):
+        patterns['Bearish Engulfing'] = True
 
-    return {k: v for k, v in patterns.items() if v}
+    return patterns
 
 # Main function to fetch data, calculate metrics, and return a stock score
 def get_stock_score(ticker):
@@ -53,8 +56,8 @@ def get_stock_score(ticker):
 
     # Ensure data is not empty
     if stock_data.empty:
-        return "No data available for ticker"
-    
+        return "No data available for ticker", {}, {}
+
     # Calculate Rolling Means
     stock_data['7d_open'] = stock_data['Open'].rolling(window=7).mean()
     stock_data['50d_open'] = stock_data['Open'].rolling(window=50).mean()
