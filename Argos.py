@@ -3,14 +3,15 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 
-# Custom RSI calculation function
+# Custom RSI calculation function with proper indexing
 def calculate_rsi(data, window=14):
     delta = data['Close'].diff()
     gain = np.where(delta > 0, delta, 0)
     loss = np.where(delta < 0, -delta, 0)
 
-    avg_gain = pd.Series(gain).rolling(window=window, min_periods=1).mean()
-    avg_loss = pd.Series(loss).rolling(window=window, min_periods=1).mean()
+    # Ensure the index of the stock data is used in the Series
+    avg_gain = pd.Series(gain, index=data.index).rolling(window=window, min_periods=1).mean()
+    avg_loss = pd.Series(loss, index=data.index).rolling(window=window, min_periods=1).mean()
 
     rs = avg_gain / avg_loss
     rsi = 100 - (100 / (1 + rs))
