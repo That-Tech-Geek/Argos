@@ -1,20 +1,86 @@
-# Argos: Algorithmic Regulatory Guardian with Explainable Systems
-## Introduction
-Inspired by the vigilant hundred-eyed giant of Greek mythology, Argos safeguards the algorithmic trading landscape with cutting-edge AI and explainable systems. It empowers financial institutions to ensure their trading practices adhere to ever-evolving regulations, fostering trust and transparency within the financial system.
-### Core Functionality
-* In-Depth Algorithmic Analysis: Argos meticulously dissects algorithmic trading strategies, leveraging explainable AI techniques to identify potential legal and regulatory violations. This goes beyond mere detection, providing clear explanations that build trust and facilitate human oversight.
-* Customizable Regulatory Landscape: Tailor Argos to your specific needs by defining the relevant regulations based on jurisdiction or asset class. This ensures the analysis aligns with the specific regulatory environment you operate in.
-* Real-time Monitoring (Optional - Future Development): For future development, Argos can be extended to continuously monitor trading activity for suspicious patterns in real-time. This provides an extra layer of vigilance and reduces the risk of potential violations.
-## Benefits
-* Enhanced Compliance: Mitigate the risk of legal and regulatory issues associated with non-compliant algorithmic trading. Argos helps you navigate the complex regulatory landscape and stay ahead of evolving requirements.
-* Transparency and Trust: Demystify the "black box" nature of trading algorithms with Argos' explainable AI. Users can readily understand the system's reasoning behind potential compliance concerns, fostering trust and confidence.
-* Empowering All Players: Level the playing field, especially for smaller firms. Argos offers a valuable tool for ensuring compliance, even with limited resources compared to larger institutions.
-### Getting Started 
-* **Please note that Argos is currently under development.**
-* This section will be filled in once the project progresses and you have specific steps for setup, configuration, and usage. Here are some potential areas to cover in the future:
+# Argos: Stock Scoring Application
 
-We welcome contributions to Argos! Please refer to CONTRIBUTING.md for guidelines for participation, code style, testing practices, and other relevant information.
+This is a **Stock Scoring Application** built using **Streamlit**. The app fetches stock market data and evaluates a stock ticker based on various metrics like rolling means, VIX volatility data, RSI (Relative Strength Index), financial ratios, and candlestick pattern analysis to provide an overall score for the stock.
+
+## Features
+
+- **Rolling Means**: Calculates 7-day, 50-day, and 200-day rolling averages for both the opening and closing prices of the stock.
+- **VIX Data**: Fetches the VIX (Volatility Index) for multiple timeframes including 1 year, 1 month, 1 day, 1 hour, and 1 minute.
+- **RSI (Relative Strength Index)**: Determines the percentage of time the stock was overbought or oversold.
+- **Financial Ratios**: Fetches financial ratios such as Price-to-Earnings (P/E), Price-to-Book (P/B), Return on Equity (ROE), Debt-to-Equity, and Current Ratio to evaluate the stock's financial health.
+- **Candlestick Pattern Analysis**: Uses technical indicators like Doji, Hammer, and Engulfing patterns to assess the stock's candlestick patterns.
+
+## Installation
+
+1. Clone the repository or download the source code.
+
+2. Install the required dependencies:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3. Required libraries:
+    - [Streamlit](https://streamlit.io/)
+    - [yfinance](https://pypi.org/project/yfinance/)
+    - [TA-Lib](https://pypi.org/project/TA-Lib/)
+    - [Pandas](https://pandas.pydata.org/)
+    - [NumPy](https://numpy.org/)
+
+## Usage
+
+1. Run the Streamlit app:
+    ```bash
+    streamlit run stock_scoring_app.py
+    ```
+
+2. Once the app starts, enter the stock ticker in the input box (e.g., `AAPL` for Apple) and click the **Get Stock Score** button.
+
+3. The app will fetch stock data, perform calculations, and display the overall score for the selected ticker.
+
+## Application Logic
+
+The stock score is calculated using the following components:
+
+1. **Rolling Means**:
+    - `7d`, `50d`, `200d` averages of both the opening and closing prices.
+  
+2. **VIX (Volatility Index)**:
+    - VIX values are fetched for multiple intervals (1 year, 1 month, 1 day, 1 hour, 1 minute) and averaged.
+
+3. **RSI (Relative Strength Index)**:
+    - The percentage of time the stock is in an overbought (RSI > 70) or oversold (RSI < 30) condition is considered.
+
+4. **Financial Ratios**:
+    - Key financial ratios like P/E, P/B, ROE, Debt-to-Equity, and Current Ratio are fetched from Yahoo Finance.
+
+5. **Candlestick Patterns**:
+    - Technical analysis of candlestick patterns like Doji, Hammer, and Engulfing is performed using TA-Lib.
+
+The scoring formula combines these metrics to produce an overall score. Each component is weighted to reflect its importance.
+
+## Example
+
+To get a stock score for **Apple (AAPL)**:
+- Enter `AAPL` in the input box and click **Get Stock Score**.
+- The app will display the overall score based on its market performance and financial metrics.
+
+## Screenshots
+
+![App Screenshot](assets/stock_scoring_screenshot.png)
+
 ## License
-Argos is under the GPL-3.0 license. A LICENSE file will be included to specify the exact terms.
-## Disclaimer
-* **Argos is provided for informational purposes only and should not be considered legal advice. It is your responsibility to ensure your algorithmic trading practices comply with all applicable laws and regulations. You should consult with legal professionals to obtain specific guidance based on your situation.**
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+### Note
+
+- This application provides a competitive score based on available data and technical analysis. It is recommended to conduct further research before making investment decisions.
+- Ensure that `TA-Lib` is properly installed, as it might require additional setup on some systems.
+
+---
+
+## Contact
+
+For any queries, feel free to contact the developer.
