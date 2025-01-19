@@ -6,10 +6,12 @@ from scipy.optimize import minimize
 
 # Function to fetch historical stock data
 def fetch_data(tickers):
-    data = yf.download(tickers, period="1y", interval="1d")['Adj Close']
-    # Flatten multi-index if necessary
+    data = yf.download(tickers, period="1y", interval="1d")
+    # Access 'Adj Close' specifically for each ticker
     if isinstance(data.columns, pd.MultiIndex):
-        data = data.xs('Adj Close', axis=1, level=1)
+        data = data['Adj Close']
+    else:
+        data = data[['Adj Close']]
     return data
 
 # Function to calculate daily returns
