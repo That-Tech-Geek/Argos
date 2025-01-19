@@ -7,11 +7,13 @@ from scipy.optimize import minimize
 # Function to fetch historical stock data
 def fetch_data(tickers):
     data = yf.download(tickers, period="1y", interval="1d")
-    # Access 'Adj Close' specifically for each ticker
+    
+    # Check if columns are multi-level (this happens when multiple tickers are involved)
     if isinstance(data.columns, pd.MultiIndex):
-        data = data['Adj Close']
+        data = data['Adj Close']  # Extract only the adjusted close price for each ticker
     else:
-        data = data[['Adj Close']]
+        data = data[['Adj Close']]  # For a single ticker, extract the adjusted close price directly
+        
     return data
 
 # Function to calculate daily returns
