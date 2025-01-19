@@ -2,136 +2,77 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import streamlit as st
+from scipy.optimize import minimize
 
-# Function to calculate RSI
-def calculate_rsi(data, window=14):
-    delta = data['Close'].diff()
-    gain = delta.where(delta > 0, 0)
-    loss = -delta.where(delta < 0, 0)
+# Function to fetch historical stock data
+def fetch_data(tickers):
+    data = yf.download(tickers, period="1y", interval="1d")['Adj Close']
+    return data
 
-    avg_gain = gain.rolling(window=window, min_periods=1).mean()
-    avg_loss = loss.rolling(window=window, min_periods=1).mean()
+# Function to calculate daily returns
+def calculate_returns(data):
+    returns = data.pct_change().dropna()
+    return returns
 
-    rs = avg_gain / avg_loss
-    rsi = 100 - (100 / (1 + rs))
-    return rsi
+# Function to calculate the expected portfolio return and volatility
+def portfolio_metrics(weights, mean_returns, cov_matrix):
+    portfolio_return = np.dot(weights, mean_returns)
+    portfolio_volatility = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+    return portfolio_return, portfolio_volatility
 
-# Function to calculate financial ratios
-def calculate_financial_ratios(ticker):
-    stock = yf.Ticker(ticker)
-    ratios = {}
+# Function to calculate the Sharpe Ratio
+def sharpe_ratio(weights, mean_returns, cov_matrix, risk_free_rate=0.0):
+    portfolio_return, portfolio_volatility = portfolio_metrics(weights, mean_returns, cov_matrix)
+    return - (portfolio_return - risk_free_rate) / portfolio_volatility  # Negative for minimization
 
-    # Example financial ratios
-    ratios['PE Ratio'] = stock.info.get('forwardPE', np.nan)  # Forward P/E ratio
-    ratios['ROE'] = stock.info.get('returnOnEquity', np.nan)  # Return on Equity
-    ratios['Debt to Equity'] = stock.info.get('debtToEquity', np.nan)  # Debt to Equity ratio
-    ratios['Current Ratio'] = stock.info.get('currentRatio', np.nan)  # Current Ratio
+# Function to get the optimal portfolio
+def get_optimal_portfolio(tickers):
+    # Fetch the data
+    data = fetch_data(tickers)
 
-    return ratios
+    # Calculate returns
+    returns = calculate_returns(data)
 
-# Function to perform candlestick analysis
-def perform_candlestick_analysis(stock_data):
-    patterns = {}
+    # Calculate mean returns and covariance matrix
+    mean_returns = returns.mean()
+    cov_matrix = returns.cov()
 
-    # Check for Bullish Engulfing pattern
-    if len(stock_data) >= 2:
-        if (
-            (stock_data['Open'].iloc[-2] > stock_data['Close'].iloc[-2]).all() and
-            (stock_data['Close'].iloc[-1] > stock_data['Open'].iloc[-1]).all() and
-            (stock_data['Open'].iloc[-1] < stock_data['Close'].iloc[-2]).all()
-        ):
-            patterns['Bullish Engulfing'] = True
+    # Number of assets
+    num_assets = len(tickers)
 
-        # Check for Bearish Engulfing pattern
-        if (
-            (stock_data['Open'].iloc[-2] < stock_data['Close'].iloc[-2]).all() and
-            (stock_data['Close'].iloc[-1] < stock_data['Open'].iloc[-1]).all() and
-            (stock_data['Open'].iloc[-1] > stock_data['Close'].iloc[-2]).all()
-        ):
-            patterns['Bearish Engulfing'] = True
+    # Initial guess for the weights (equal distribution)
+    initial_weights = np.ones(num_assets) / num_assets
 
-    return patterns
+    # Bounds for the weights (each weight between 0 and 1)
+    bounds = tuple((0, 1) for _ in range(num_assets))
 
-# Main function to fetch data, calculate metrics, and return a stock score
-def get_stock_score(ticker):
-    # Download stock data
-    stock_data = yf.download(ticker, period="1y", interval="1d")
+    # Constraints: sum of weights should be 1
+    constraints = ({'type': 'eq', 'fun': lambda weights: np.sum(weights) - 1})
 
-    # Ensure data is not empty
-    if stock_data.empty:
-        return None, {}, {}
+    # Minimize the negative Sharpe ratio
+    result = minimize(sharpe_ratio, initial_weights, args=(mean_returns, cov_matrix), method='SLSQP', bounds=bounds, constraints=constraints)
 
-    # Calculate Rolling Means
-    stock_data['7d_open'] = stock_data['Open'].rolling(window=7).mean()
-    stock_data['50d_open'] = stock_data['Open'].rolling(window=50).mean()
-    stock_data['200d_open'] = stock_data['Open'].rolling(window=200).mean()
-    stock_data['7d_close'] = stock_data['Close'].rolling(window=7).mean()
-    stock_data['50d_close'] = stock_data['Close'].rolling(window=50).mean()
-    stock_data['200d_close'] = stock_data['Close'].rolling(window=200).mean()
+    optimal_weights = result.x
+    portfolio_return, portfolio_volatility = portfolio_metrics(optimal_weights, mean_returns, cov_matrix)
 
-    # Calculate RSI
-    stock_data['RSI'] = calculate_rsi(stock_data)
-
-    # Calculate VIX data for scoring (example using VIX)
-    vix_data = yf.download('^VIX', period='1y', interval='1d')
-
-    # Scoring logic
-    score_open = (stock_data['7d_open'].iloc[-1] + stock_data['50d_open'].iloc[-1] + stock_data['200d_open'].iloc[-1]) / 3
-    score_close = (stock_data['7d_close'].iloc[-1] + stock_data['50d_close'].iloc[-1] + stock_data['200d_close'].iloc[-1]) / 3
-    score_vix = vix_data['Close'].iloc[-1] if not vix_data.empty else np.nan
-
-    # Calculate RSI impact on score (normalized)
-    rsi_overbought = len(stock_data[stock_data['RSI'] > 70])
-    rsi_oversold = len(stock_data[stock_data['RSI'] < 30])
-    rsi_impact = (rsi_overbought - rsi_oversold) / len(stock_data) if len(stock_data) > 0 else 0
-
-    # Combine the scores with weights
-    overall_score = (
-        0.3 * score_open +
-        0.3 * score_close +
-        0.2 * score_vix +
-        0.1 * rsi_impact
-    )
-
-    # Ensure overall_score is a scalar value
-    overall_score = float(overall_score) if isinstance(overall_score, pd.Series) else overall_score
-
-    return overall_score, calculate_financial_ratios(ticker), perform_candlestick_analysis(stock_data)
+    return optimal_weights, portfolio_return, portfolio_volatility
 
 # Streamlit interface
-st.title("Stock Scoring System")
+st.title("Stock Portfolio Optimization")
 
-# Input for comma-delimited tickers
-tickers_input = st.text_input("Enter stock ticker symbols (comma-separated, e.g., AAPL, MSFT):")
-tickers = [ticker.strip() for ticker in tickers_input.split(',')] if tickers_input else []
+# Input for ticker symbols
+tickers_input = st.text_input("Enter stock tickers (comma separated, e.g., AAPL, MSFT, TSLA):")
+if tickers_input:
+    tickers = [ticker.strip() for ticker in tickers_input.split(",")]
 
-if st.button("Generate Portfolio"):
-    if tickers:
-        # Initialize an empty list to store the scores
-        stock_scores = []
+    if st.button("Optimize Portfolio"):
+        optimal_weights, portfolio_return, portfolio_volatility = get_optimal_portfolio(tickers)
 
-        # Loop through each ticker and calculate the score
-        for ticker in tickers:
-            score, financial_ratios, candlestick_analysis = get_stock_score(ticker)
-            if score is not None:
-                stock_scores.append({
-                    'Ticker': ticker,
-                    'Score': score,
-                    'Financial Ratios': financial_ratios,
-                    'Candlestick Patterns': candlestick_analysis
-                })
+        st.write(f"Optimal Weights for Portfolio:")
+        for ticker, weight in zip(tickers, optimal_weights):
+            st.write(f"{ticker}: {weight * 100:.2f}%")
 
-        if stock_scores:
-            # Convert list of stock scores to DataFrame
-            df_scores = pd.DataFrame(stock_scores)
-            st.write("Stock Scores Dataframe:")
-            st.write(df_scores)
-
-            # Build an ideal portfolio based on the highest scores
-            ideal_portfolio = df_scores.nlargest(5, 'Score')  # Select top 5 based on the highest score
-            st.write("Ideal Portfolio (Top 5 Stocks):")
-            st.write(ideal_portfolio)
-        else:
-            st.error("No valid data found for the given tickers.")
-    else:
-        st.error("Please enter valid ticker symbols.")
+        st.write(f"Expected Portfolio Return: {portfolio_return * 100:.2f}%")
+        st.write(f"Expected Portfolio Volatility (Risk): {portfolio_volatility * 100:.2f}%")
+else:
+    st.error("Please enter valid tickers.")
