@@ -59,7 +59,7 @@ def get_stock_score(ticker):
 
     # Ensure data is not empty
     if stock_data.empty:
-        return "No data available for ticker", {}, {}
+        return None, {}, {}
 
     # Calculate Rolling Means
     stock_data['7d_open'] = stock_data['Open'].rolling(window=7).mean()
@@ -98,55 +98,40 @@ def get_stock_score(ticker):
 
     return overall_score, calculate_financial_ratios(ticker), perform_candlestick_analysis(stock_data)
 
-    # Calculate Rolling Means
-    stock_data['7d_open'] = stock_data['Open'].rolling(window=7).mean()
-    stock_data['50d_open'] = stock_data['Open'].rolling(window=50).mean()
-    stock_data['200d_open'] = stock_data['Open'].rolling(window=200).mean()
-    stock_data['7d_close'] = stock_data['Close'].rolling(window=7).mean()
-    stock_data['50d_close'] = stock_data['Close'].rolling(window=50).mean()
-    stock_data['200d_close'] = stock_data['Close'].rolling(window=200).mean()
-
-    # Calculate RSI
-    stock_data['RSI'] = calculate_rsi(stock_data)
-
-    # Calculate VIX data for scoring (example using VIX)
-    vix_data = yf.download('^VIX', period='1y', interval='1d')
-
-    # Scoring logic
-    score_open = (stock_data['7d_open'].iloc[-1] + stock_data['50d_open'].iloc[-1] + stock_data['200d_open'].iloc[-1]) / 3
-    score_close = (stock_data['7d_close'].iloc[-1] + stock_data['50d_close'].iloc[-1] + stock_data['200d_close'].iloc[-1]) / 3
-    score_vix = vix_data['Close'].iloc[-1] if not vix_data.empty else np.nan
-
-    # Calculate RSI impact on score (normalized)
-    rsi_overbought = len(stock_data[stock_data['RSI'] > 70])
-    rsi_oversold = len(stock_data[stock_data['RSI'] < 30])
-    rsi_impact = (rsi_overbought - rsi_oversold) / len(stock_data) if len(stock_data) > 0 else 0
-
-    # Combine the scores with weights
-    overall_score = (
-        0.3 * score_open +
-        0.3 * score_close +
-        0.2 * score_vix +
-        0.1 * rsi_impact
-    )
-
-    return overall_score, calculate_financial_ratios(ticker), perform_candlestick_analysis(stock_data)
-
 # Streamlit interface
 st.title("Stock Scoring System")
 
-# Input for ticker symbol
-ticker = st.text_input("Enter stock ticker symbol (e.g., AAPL):")
+# Input for comma-delimited tickers
+tickers_input = st.text_input("Enter stock ticker symbols (comma-separated, e.g., AAPL, MSFT):")
+tickers = [ticker.strip() for ticker in tickers_input.split(',')] if tickers_input else []
 
-if st.button("Get Stock Score"):
-    if ticker:
-        score, financial_ratios, candlestick_analysis = get_stock_score(ticker)
-        st.write(f"Overall score for {ticker}: {score:.2f}")
-        st.write("Financial Ratios:")
-        for key, value in financial_ratios.items():
-            st.write(f"{key}: {value}")
-        st.write("Recent Candlestick Patterns:")
-        for pattern in candlestick_analysis:
-            st.write(pattern)
+if st.button("Generate Portfolio"):
+    if tickers:
+        # Initialize an empty list to store the scores
+        stock_scores = []
+
+        # Loop through each ticker and calculate the score
+        for ticker in tickers:
+            score, financial_ratios, candlestick_analysis = get_stock_score(ticker)
+            if score is not None:
+                stock_scores.append({
+                    'Ticker': ticker,
+                    'Score': score,
+                    'Financial Ratios': financial_ratios,
+                    'Candlestick Patterns': candlestick_analysis
+                })
+
+        if stock_scores:
+            # Convert list of stock scores to DataFrame
+            df_scores = pd.DataFrame(stock_scores)
+            st.write("Stock Scores Dataframe:")
+            st.write(df_scores)
+
+            # Build an ideal portfolio based on the highest scores
+            ideal_portfolio = df_scores.nlargest(5, 'Score')  # Select top 5 based on the highest score
+            st.write("Ideal Portfolio (Top 5 Stocks):")
+            st.write(ideal_portfolio)
+        else:
+            st.error("No valid data found for the given tickers.")
     else:
-        st.error("Please enter a valid ticker symbol.")
+        st.error("Please enter valid ticker symbols.")
