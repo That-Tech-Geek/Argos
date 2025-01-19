@@ -6,19 +6,26 @@ from scipy.optimize import minimize
 
 # Function to fetch historical stock data
 def fetch_data(tickers):
-    data = yf.download(tickers, period="1y", interval="1d")
-    
-    # Check if columns are multi-level (this happens when multiple tickers are involved)
-    if isinstance(data.columns, pd.MultiIndex):
-        data = data['Adj Close']  # Extract only the adjusted close price for each ticker
-    else:
-        data = data[['Adj Close']]  # For a single ticker, extract the adjusted close price directly
+    try:
+        data = yf.download(tickers, period="1y", interval="1d")
         
-    # If only one ticker was provided, convert the DataFrame to a Series
-    if isinstance(data, pd.Series):
-        data = data.to_frame()  # Convert Series to DataFrame for consistency
+        # Print the fetched data for debugging
+        print(data.head())  # Debugging line to see the structure of the data
 
-    return data
+        # Check if columns are multi-level (this happens when multiple tickers are involved)
+        if isinstance(data.columns, pd.MultiIndex):
+            data = data['Adj Close']  # Extract only the adjusted close price for each ticker
+        else:
+            data = data[['Adj Close']]  # For a single ticker, extract the adjusted close price directly
+            
+        # If only one ticker was provided, convert the DataFrame to a Series
+        if isinstance(data, pd.Series):
+            data = data.to_frame()  # Convert Series to DataFrame for consistency
+
+        return data
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame on error
 
 # Function to calculate daily returns
 def calculate_returns(data):
