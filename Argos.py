@@ -14,6 +14,10 @@ def fetch_data(tickers):
     else:
         data = data[['Adj Close']]  # For a single ticker, extract the adjusted close price directly
         
+    # If only one ticker was provided, convert the DataFrame to a Series
+    if isinstance(data, pd.Series):
+        data = data.to_frame()  # Convert Series to DataFrame for consistency
+
     return data
 
 # Function to calculate daily returns
@@ -83,3 +87,4 @@ if tickers_input:
         st.write(f"Expected Portfolio Volatility (Risk): {portfolio_volatility * 100:.2f}%")
 else:
     st.error("Please enter valid tickers.")
+
